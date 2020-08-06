@@ -19,10 +19,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pixmap = None
         self.dirModel = QtWidgets.QFileSystemModel(self)
         self.fileModel = QtWidgets.QFileSystemModel(self)
+        self.isInterlacing = False
 
         self.ui.actionTest.triggered.connect(self.test)
         self.ui.actionOpen_Folder.triggered.connect(self.openDir)
         self.ui.treeView.clicked.connect(self.treeViewClicked)
+        self.checkbox = QtWidgets.QCheckBox()
+        self.checkbox.setText("1080i        ")
+        self.ui.statusbar.addPermanentWidget(self.checkbox)
+        self.checkbox.stateChanged.connect(self.checkboxClicked)
 
     def openDir(self,MainWindow):
         "Open folder selecting dialog"
@@ -35,6 +40,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fileModel.setRootPath(path)
         self.ui.listView.setModel(self.fileModel)
         self.ui.listView.selectionModel().currentChanged.connect(self.listViewMoved)
+
+    def checkboxClicked(self,state):
+        self.isInterlacing = (state==Qt.Checked)
+        print(self.isInterlacing)
+
 
     def treeViewClicked(self,index):
         path = self.dirModel.fileInfo(index).absoluteFilePath()
@@ -57,7 +67,10 @@ class MainWindow(QtWidgets.QMainWindow):
         "Show image on graphics view"
         picFile = QFile(path)
         if(not picFile.open(QFile.ReadOnly)):return
-        self.pic = QImage(picFile.read(self.IMAGESIZE),self.W,self.H,QImage.Format_Grayscale8)
+        if(self.isInterlacing):
+            self.pic = QImage(picFile.read(self.IMAGESIZE//2),self.W,self.H//2,QImage.Format_Grayscale8)
+        else:
+            self.pic = QImage(picFile.read(self.IMAGESIZE),self.W,self.H,QImage.Format_Grayscale8)
         self.pixmap = QPixmap.fromImage(self.pic)
         self.ui.imageLabel.setPixmap(self.pixmap.scaled(self.ui.imageLabel.width(),self.ui.imageLabel.height(),Qt.KeepAspectRatio))
 
