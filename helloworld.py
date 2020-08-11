@@ -1,9 +1,10 @@
 from PyQt5 import QtWidgets
 from Ui_mainWindow import Ui_MainWindow
-from PyQt5.QtGui import QImage,QPixmap,QStandardItemModel
+from PyQt5.QtGui import QImage,QPixmap,QStandardItemModel,QKeySequence
 from PyQt5.QtCore import QByteArray,QFile
 from PyQt5.QtCore import Qt,QDir,QItemSelectionModel
 import sys,os
+from send2trash import send2trash
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -24,21 +25,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.actionTest.triggered.connect(self.test)
         self.ui.actionOpen_Folder.triggered.connect(self.openDir)
         self.ui.treeView.clicked.connect(self.treeViewClicked)
+        self.ui.listView.doubleClicked.connect(self.listViewDoubleClicked)
         self.checkbox = QtWidgets.QCheckBox()
         self.checkbox.setText("1080i        ")
         self.ui.statusbar.addPermanentWidget(self.checkbox)
         self.checkbox.stateChanged.connect(self.checkboxClicked)
         # override imageLabel resizeEvent to update pixmap
         self.ui.imageLabel.resizeEvent = self.imageLabelResizeEvent
+        # add delete function
+        self.deleteShortcut = QtWidgets.QShortcut(QKeySequence.Delete,self)
+        self.deleteShortcut.activated.connect(self.deleteEvent)
 
     def openDir(self,MainWindow):
         "Open folder selecting dialog"
         dialog = QtWidgets.QFileDialog(self)
         path = dialog.getExistingDirectory(None)
-        self.dirModel.setRootPath("/")
+        self.setWindowTitle(path+" [Raw Image Viewer]")
+        self.dirModel.setRootPath(path)
         self.dirModel.setFilter(QDir.NoDotAndDotDot|QDir.AllDirs)
         self.ui.treeView.setModel(self.dirModel)
         self.ui.treeView.setRootIndex(self.dirModel.index(path))
+        for i in range(1,self.dirModel.columnCount()):
+            self.ui.treeView.hideColumn(i)
+        self.fileModel.setNameFilters(["*.raw"])
         self.fileModel.setRootPath(path)
         self.ui.listView.setModel(self.fileModel)
         self.ui.listView.setRootIndex(self.fileModel.index(path))
@@ -47,17 +56,24 @@ class MainWindow(QtWidgets.QMainWindow):
     def checkboxClicked(self,state):
         self.isInterlacing = (state==Qt.Checked)
         self.updateImage()
-        print(self.isInterlacing)
 
     def treeViewClicked(self,index):
         path = self.dirModel.fileInfo(index).absoluteFilePath()
-        print(path)
         self.ui.listView.setRootIndex(self.fileModel.index(path))
 
     def listViewMoved(self,index):
         path = self.fileModel.fileInfo(index).absoluteFilePath()
-        print(path)
         self.showImage(path)
+
+    def listViewDoubleClicked(self,index):
+        # TODO: implement double click features on folders
+        if(not self.ui.listView.selectionModel()): # Not created yet
+            return
+        path = self.fileModel.fileInfo(index).absoluteFilePath()
+        if(os.path.isdir(path)):
+            # self.dirModel.
+            pass
+            
 
     def showImage(self, path):
         "Show image on graphics view"
@@ -66,7 +82,6 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def updateImage(self):
         if(self.picPath):
-            self.setWindowTitle(os.path.basename(self.picPath)+" [Raw Image Viewer]")
             self.ui.statusbar.showMessage(self.picPath)
             picFile = QFile(self.picPath)
             if(not picFile.open(QFile.ReadOnly)):
@@ -82,6 +97,35 @@ class MainWindow(QtWidgets.QMainWindow):
         "Override the resize event"
         #resize image label
         self.updateImage()
+
+    def deleteEvent(self):
+        "Create Message Box for confirmation and delete selected items"
+        if(not self.ui.listView.selectionModel()): # Not created yet
+            return
+        selectedIndexes = self.ui.listView.selectionModel().selectedIndexes()
+        if(len(selectedIndexes)==0):return
+        if(len(selectedIndexes)==1):
+            # Only 1 selection, no confirming
+            path = self.fileModel.fileInfo(selectedIndexes[0]).absoluteFilePath()
+            print("Delete to Trash: " + path)
+            send2trash(path)
+        else:
+            # Multiselection, need confirmation
+            messageBox = QtWidgets.QMessageBox(self)
+            messageBox.setStandardButtons(QtWidgets.QMessageBox.Yes)
+            messageBox.addButton(QtWidgets.QMessageBox.No)
+            messageBox.setDefaultButton(QtWidgets.QMessageBox.No)
+            messageBox.setWindowTitle("Delete")
+            messageBox.setText(" Delete {:d} items\n\n Confirm?".format(len(selectedIndexes)))
+            if(messageBox.exec()==QtWidgets.QMessageBox.Yes):
+                print("Deleting")
+                for index in selectedIndexes:
+                    path = self.fileModel.fileInfo(index).absoluteFilePath()
+                    print("Delete to Trash: " + path)
+                    send2trash(path)
+            else:
+                print("Do nothing")
+
 
     def test(self,MainWindow):
         print(self.ui.listView.selectionModel())

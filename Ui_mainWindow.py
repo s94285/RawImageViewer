@@ -42,7 +42,7 @@ class Ui_MainWindow(object):
         self.treeView.setSizePolicy(sizePolicy)
         self.treeView.setObjectName("treeView")
         self.listView = QtWidgets.QListView(self.splitter)
-        self.listView.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.listView.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.listView.setObjectName("listView")
         self.imageLabel = QtWidgets.QLabel(self.splitter_2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored)
