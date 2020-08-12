@@ -2,7 +2,7 @@ from PyQt5 import QtWidgets
 from Ui_mainWindow import Ui_MainWindow
 from PyQt5.QtGui import QImage,QPixmap,QStandardItemModel,QKeySequence
 from PyQt5.QtCore import QByteArray,QFile
-from PyQt5.QtCore import Qt,QDir,QItemSelectionModel
+from PyQt5.QtCore import Qt,QDir,QItemSelectionModel,QModelIndex
 import sys,os
 from send2trash import send2trash
 
@@ -22,10 +22,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fileModel = QtWidgets.QFileSystemModel(self)
         self.isInterlacing = False
 
-        self.ui.actionTest.triggered.connect(self.test)
-        self.ui.actionOpen_Folder.triggered.connect(self.openDir)
+        self.ui.actionOpen_Folder.triggered.connect(self.openDirDialog)
         self.ui.treeView.clicked.connect(self.treeViewClicked)
         self.ui.listView.doubleClicked.connect(self.listViewDoubleClicked)
+
+        self.dirModel.setFilter(QDir.NoDotAndDotDot|QDir.AllDirs)
+        self.ui.treeView.setModel(self.dirModel)
+        for i in range(1,self.dirModel.columnCount()):
+            self.ui.treeView.hideColumn(i)
+        self.fileModel.setNameFilters(["*.raw"])
+        self.fileModel.setFilter(self.fileModel.filter()&~QDir.Dirs)
+        self.ui.listView.setModel(self.fileModel)
+        self.ui.listView.selectionModel().currentChanged.connect(self.listViewMoved)
+        # use myComputer as first directory
+        self.ui.treeView.setRootIndex(self.dirModel.setRootPath(self.dirModel.myComputer()))
+        self.ui.listView.setRootIndex(self.fileModel.setRootPath(self.fileModel.myComputer()))
+
         self.checkbox = QtWidgets.QCheckBox()
         self.checkbox.setText("1080i        ")
         self.ui.statusbar.addPermanentWidget(self.checkbox)
@@ -35,23 +47,27 @@ class MainWindow(QtWidgets.QMainWindow):
         # add delete function
         self.deleteShortcut = QtWidgets.QShortcut(QKeySequence.Delete,self)
         self.deleteShortcut.activated.connect(self.deleteEvent)
+        # add gotoButton
+        self.ui.gotoButton.clicked.connect(self.gotoClicked)
 
-    def openDir(self,MainWindow):
+    def openDirDialog(self,MainWindow):
         "Open folder selecting dialog"
         dialog = QtWidgets.QFileDialog(self)
         path = dialog.getExistingDirectory(None)
-        self.setWindowTitle(path+" [Raw Image Viewer]")
-        self.dirModel.setRootPath(path)
-        self.dirModel.setFilter(QDir.NoDotAndDotDot|QDir.AllDirs)
-        self.ui.treeView.setModel(self.dirModel)
-        self.ui.treeView.setRootIndex(self.dirModel.index(path))
-        for i in range(1,self.dirModel.columnCount()):
-            self.ui.treeView.hideColumn(i)
-        self.fileModel.setNameFilters(["*.raw"])
+        self.openDir(path)
+
+    def openDir(self,path):
+        "Open directory on treeview"
+        self.ui.addressLineEdit.setText(path)
+        self.ui.treeView.setCurrentIndex(self.dirModel.index(path))
         self.fileModel.setRootPath(path)
-        self.ui.listView.setModel(self.fileModel)
         self.ui.listView.setRootIndex(self.fileModel.index(path))
-        self.ui.listView.selectionModel().currentChanged.connect(self.listViewMoved)
+
+    def gotoClicked(self):
+        "Triggered by gotoButton and addressLineEdit return pressed signal"
+        path = self.ui.addressLineEdit.text()
+        if(os.path.isdir(path)):
+            self.openDir(path)
 
     def checkboxClicked(self,state):
         self.isInterlacing = (state==Qt.Checked)
@@ -59,6 +75,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def treeViewClicked(self,index):
         path = self.dirModel.fileInfo(index).absoluteFilePath()
+        self.ui.addressLineEdit.setText(path)
         self.ui.listView.setRootIndex(self.fileModel.index(path))
 
     def listViewMoved(self,index):
@@ -78,6 +95,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def showImage(self, path):
         "Show image on graphics view"
         self.picPath = path
+        self.setWindowTitle(os.path.basename(path)+" [Raw Image Viewer]")
         self.updateImage()
         
     def updateImage(self):

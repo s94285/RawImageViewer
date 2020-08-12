@@ -15,7 +15,7 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+    <item row="2" column="0">
      <widget class="QSplitter" name="splitter_2">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -66,6 +66,39 @@
       </widget>
      </widget>
     </item>
+    <item row="1" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <item>
+       <widget class="QLabel" name="addressLabel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Directory</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="addressLineEdit"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="gotoButton">
+        <property name="text">
+         <string>GoTo</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -81,23 +114,56 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionTest"/>
     <addaction name="actionOpen_Folder"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionGitHub"/>
+    <addaction name="separator"/>
+    <addaction name="actionBy_Kevin_Lin_NCTU"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionTest">
-   <property name="text">
-    <string>Test</string>
-   </property>
-  </action>
   <action name="actionOpen_Folder">
    <property name="text">
     <string>Open Folder</string>
    </property>
   </action>
+  <action name="actionGitHub">
+   <property name="text">
+    <string>GitHub</string>
+   </property>
+  </action>
+  <action name="actionBy_Kevin_Lin_NCTU">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>By Kevin Lin @ NCTU</string>
+   </property>
+  </action>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>addressLineEdit</sender>
+   <signal>returnPressed()</signal>
+   <receiver>gotoButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>415</x>
+     <y>103</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>795</x>
+     <y>103</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
