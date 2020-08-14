@@ -1,6 +1,6 @@
 # Raw Image Viewer
 ![demo_1080i](https://github.com/s94285/RawImageViewer/blob/master/screenshots/demo_1080i.png)
-![demo_1080p](https://github.com/s94285/RawImageViewer/blob/master/screenshots/demo_1080i.png)
+![demo_1080p](https://github.com/s94285/RawImageViewer/blob/master/screenshots/demo_1080p.png)
 ## Features
 - For reviewing dumped images and delete unwanted images
 - View folders and image list on left
