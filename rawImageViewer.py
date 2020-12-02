@@ -97,9 +97,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.picPath = path
         self.setWindowTitle(os.path.basename(path)+" [Raw Image Viewer]")
         self.updateImage()
-        
+    
+    def showErrorSign(self):
+        self.pic = QImage("error.png")
+        self.pixmap = QPixmap.fromImage(self.pic)
+        self.ui.imageLabel.setPixmap(self.pixmap.scaled(self.ui.imageLabel.width(),self.ui.imageLabel.height(),Qt.KeepAspectRatio))
+
     def updateImage(self):
+        # check if image has wrong size
         if(self.picPath):
+            fileSize = os.path.getsize(self.picPath)
+            if(fileSize == 1920*1080):
+                self.isInterlacing = False
+                self.checkbox.setChecked(False)
+            elif(fileSize == 1920*1080//2):
+                self.isInterlacing = True
+                self.checkbox.setChecked(True)
+            else:
+                self.showErrorSign()
+                return
             self.ui.statusbar.showMessage(self.picPath)
             picFile = QFile(self.picPath)
             if(not picFile.open(QFile.ReadOnly)):
@@ -126,7 +142,10 @@ class MainWindow(QtWidgets.QMainWindow):
             # Only 1 selection, no confirming
             path = self.fileModel.fileInfo(selectedIndexes[0]).absoluteFilePath()
             print("Delete to Trash: " + path)
-            send2trash(path)
+            if os.name == 'nt':
+                send2trash(path.replace("/","\\"))
+            else:
+                send2trash(path)
         else:
             # Multiselection, need confirmation
             messageBox = QtWidgets.QMessageBox(self)
@@ -140,7 +159,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 for index in selectedIndexes:
                     path = self.fileModel.fileInfo(index).absoluteFilePath()
                     print("Delete to Trash: " + path)
-                    send2trash(path)
+                    if os.name == 'nt':
+                        send2trash(path.replace("/","\\"))
+                    else:
+                        send2trash(path)
             else:
                 print("Do nothing")
 
