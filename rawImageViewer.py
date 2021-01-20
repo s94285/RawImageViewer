@@ -20,7 +20,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pixmap = None
         self.dirModel = QtWidgets.QFileSystemModel(self)
         self.fileModel = QtWidgets.QFileSystemModel(self)
-        self.isInterlacing = False
 
         self.ui.actionOpen_Folder.triggered.connect(self.openDirDialog)
         self.ui.treeView.clicked.connect(self.treeViewClicked)
@@ -38,10 +37,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.treeView.setRootIndex(self.dirModel.setRootPath(self.dirModel.myComputer()))
         self.ui.listView.setRootIndex(self.fileModel.setRootPath(self.fileModel.myComputer()))
 
-        self.checkbox = QtWidgets.QCheckBox()
-        self.checkbox.setText("1080i        ")
-        self.ui.statusbar.addPermanentWidget(self.checkbox)
-        self.checkbox.stateChanged.connect(self.checkboxClicked)
+        self.resolutionText = QtWidgets.QLabel()
+        self.ui.statusbar.addPermanentWidget(self.resolutionText)
         # override imageLabel resizeEvent to update pixmap
         self.ui.imageLabel.resizeEvent = self.imageLabelResizeEvent
         # add delete function
@@ -69,9 +66,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if(os.path.isdir(path)):
             self.openDir(path)
 
-    def checkboxClicked(self,state):
-        self.isInterlacing = (state==Qt.Checked)
-        self.updateImage()
 
     def treeViewClicked(self,index):
         path = self.dirModel.fileInfo(index).absoluteFilePath()
@@ -108,22 +102,25 @@ class MainWindow(QtWidgets.QMainWindow):
         if(self.picPath):
             fileSize = os.path.getsize(self.picPath)
             if(fileSize == 1920*1080):
-                self.isInterlacing = False
-                self.checkbox.setChecked(False)
+                self.H = 1080
+                self.W = 1920
             elif(fileSize == 1920*1080//2):
-                self.isInterlacing = True
-                self.checkbox.setChecked(True)
+                self.H = 540
+                self.W = 1920
+            elif(fileSize == 3840*2160):
+                self.H = 2160
+                self.W = 3840
             else:
+                self.resolutionText.setText("Invalid Image Size")
                 self.showErrorSign()
                 return
+            self.IMAGESIZE = self.H*self.W*8
+            self.resolutionText.setText("{} x {}      ".format(self.W,self.H))
             self.ui.statusbar.showMessage(self.picPath)
             picFile = QFile(self.picPath)
             if(not picFile.open(QFile.ReadOnly)):
                 return
-            if(self.isInterlacing):
-                self.pic = QImage(picFile.read(self.IMAGESIZE//2),self.W,self.H//2,QImage.Format_Grayscale8)
-            else:
-                self.pic = QImage(picFile.read(self.IMAGESIZE),self.W,self.H,QImage.Format_Grayscale8)
+            self.pic = QImage(picFile.read(self.IMAGESIZE),self.W,self.H,QImage.Format_Grayscale8)
             self.pixmap = QPixmap.fromImage(self.pic)
             self.ui.imageLabel.setPixmap(self.pixmap.scaled(self.ui.imageLabel.width(),self.ui.imageLabel.height(),Qt.KeepAspectRatio))
         
