@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets
 from Ui_mainWindow import Ui_MainWindow
 from PyQt5.QtGui import QImage,QPixmap,QStandardItemModel,QKeySequence
-from PyQt5.QtCore import QByteArray,QFile
+from PyQt5.QtCore import QByteArray,QFile,QRect
 from PyQt5.QtCore import Qt,QDir,QItemSelectionModel,QModelIndex
 import sys,os
 from send2trash import send2trash
@@ -77,14 +77,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.showImage(path)
 
     def listViewDoubleClicked(self,index):
-        # TODO: implement double click features on folders
         if(not self.ui.listView.selectionModel()): # Not created yet
             return
         path = self.fileModel.fileInfo(index).absoluteFilePath()
         if(os.path.isdir(path)):
-            # self.dirModel.
-            pass
-            
+            self.openDir(path)          
 
     def showImage(self, path):
         "Show image on graphics view"
