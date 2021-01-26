@@ -96,7 +96,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def updateImage(self):
         # check if image has wrong size
-        if(self.picPath):
+        if(self.picPath and os.path.exists(self.picPath)):
             fileSize = os.path.getsize(self.picPath)
             if(fileSize == 1920*1080):
                 self.H = 1080
