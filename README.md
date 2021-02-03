@@ -13,3 +13,6 @@
 ## Usage
 - requires pyqt5, send2trash, tested on python3.7  
 - run from command line: `python3 rawImageViewer.py`
+## Windows Executable File
+- In Release  
+`nuitka --standalone --onefile --show-progress --show-memory --output-dir=dist --windows-company-name=s94285 --windows-file-version=0.1 --plugin-enable=qt-plugins --include-qt-plugins=sensible,styles rawImageViewer.py`
